@@ -1,0 +1,141 @@
+REM
+REM DROP TABLES
+REM 
+DROP TABLE Rental;
+DROP TABLE MoviePersonRole;
+DROP TABLE RentalQueue;
+DROP TABLE DVD;
+DROP TABLE MoviePerson;
+DROP TABLE Role;
+DROP TABLE Rating;
+DROP TABLE Genre;
+DROP TABLE Payment;
+DROP TABLE Member;
+DROP TABLE Membership;
+DROP TABLE ZipCode;
+DROP TABLE State;
+DROP TABLE City;
+REM
+REM CREATE TABLES
+REM 
+CREATE TABLE City(
+CityId		NUMBER(10)	NOT NULL,
+CityName	VARCHAR2(32)	NOT NULL,
+CONSTRAINT City_CityId_PK PRIMARY KEY (CityId)
+);
+CREATE TABLE State(
+StateId		NUMBER(2)	NOT NULL,
+StateName	VARCHAR2(20)	NOT NULL,
+CONSTRAINT State_StateId_PK PRIMARY KEY (StateId)
+);
+CREATE TABLE ZipCode(
+ZipCodeId	NUMBER(10)	NOT NULL,
+ZipCode		VARCHAR2(5)	NOT NULL,
+StateId		NUMBER(2),
+CityId		NUMBER(10),
+CONSTRAINT ZipCode_ZipCodeId_PK PRIMARY KEY (ZipCodeId),
+CONSTRAINT ZipCode_StateId_FK FOREIGN KEY (StateId) REFERENCES State(StateId),
+CONSTRAINT ZipCode_CityId_FK FOREIGN KEY (CityId) REFERENCES City(CityId)
+);
+CREATE TABLE Membership(
+MembershipId		NUMBER(10)	NOT NULL,
+MembershipType		VARCHAR2(128)	NOT NULL,
+MembershipLimitPerMonth	NUMBER(2)	NOT NULL,
+MembershipMonthlyPrice	NUMBER(5,2)	NOT NULL,
+MembershipMonthlyTax	NUMBER(5,2)	NOT NULL,
+MembershipDVDLostPrice	NUMBER(5,2)	NOT NULL,
+CONSTRAINT Membership_MembershipId_PK PRIMARY KEY (MembershipId)
+);
+CREATE TABLE Member(
+MemberId		NUMBER(12)	NOT NULL,
+MemberFirstName		VARCHAR2(32)	NOT NULL,
+MemberLastName		VARCHAR2(32)	NOT NULL,
+MemberInitial		VARCHAR2(32),
+MemberAddress		VARCHAR2(100),
+MemberAddressId		NUMBER(10)	NOT NULL,
+MemberPhone		VARCHAR2(14),
+MemberEMail		VARCHAR2(32)	NOT NULL,
+MemberPassword		VARCHAR2(32)	NOT NULL,
+MembershipId		NUMBER(10)	NOT NULL,
+MemberSinceDate		DATE		NOT NULL,
+CONSTRAINT Member_MemberId_PK PRIMARY KEY (MemberId),
+CONSTRAINT Member_MemberAddId_FK 
+	FOREIGN KEY (MemberAddressId) REFERENCES ZipCode(ZipCodeId),
+CONSTRAINT Member_MembershipId_FK
+	FOREIGN KEY (MembershipId) REFERENCES Membership
+);
+CREATE TABLE Payment(
+PaymentId		NUMBER(16)	NOT NULL,
+MemberId		NUMBER(12)	NOT NULL,
+AmountPaid		NUMBER(8,2)	NOT NULL,
+AmountPaidDate		DATE		NOT NULL,
+AmountPaidUntilDate	DATE		NOT NULL,
+CONSTRAINT Payment_PaymentId_PK PRIMARY KEY (PaymentId),
+CONSTRAINT Payment_MemberId_FK FOREIGN KEY (MemberId) REFERENCES Member(MemberId)
+);
+CREATE TABLE Genre(
+GenreId			NUMBER(5)	NOT NULL,
+GenreName		VARCHAR2(20)	NOT NULL,
+CONSTRAINT Genre_GenreId_PK PRIMARY KEY (GenreId)
+);
+CREATE TABLE Rating(
+RatingId		NUMBER(2)	NOT NULL,
+RatingName		VARCHAR2(10)	NOT NULL,
+RatingDescription	VARCHAR2(255)	NOT NULL,
+CONSTRAINT Rating_RatingId_PK PRIMARY KEY (RatingId)
+);
+CREATE TABLE Role(
+RoleId			NUMBER(2)	NOT NULL,
+RoleName		VARCHAR2(20)	NOT NULL,
+CONSTRAINT Role_RoleId_PK PRIMARY KEY (RoleId)
+);
+CREATE TABLE MoviePerson(
+PersonId		NUMBER(12)	NOT NULL,
+PersonFirstName		VARCHAR2(32)	NOT NULL,
+PersonLastName		VARCHAR2(32),
+PersonInitial		VARCHAR(32),		
+PersonDateOfBirth	DATE,
+CONSTRAINT MoviePerson_PersonId_PK PRIMARY KEY (PersonId)
+);
+CREATE TABLE DVD(
+DVDId			NUMBER(16)	NOT NULL,
+DVDTitle		VARCHAR2(100)	NOT NULL,
+GenreId			NUMBER(5)	NOT NULL,
+RatingId		NUMBER(2)	NOT NULL,
+DVDReleaseDate		DATE		NOT NULL,
+TheaterReleaseDate	DATE,
+DVDQuantityOnHand	NUMBER(8)	NOT NULL,
+DVDQuantityOnRent	NUMBER(8)	NOT NULL,
+DVDLostQuantity		NUMBER(8)	NOT NULL,
+CONSTRAINT DVD_DVDId_PK PRIMARY KEY (DVDId),
+CONSTRAINT DVD_GenreId_FK FOREIGN KEY (GenreId) REFERENCES Genre(GenreId),
+CONSTRAINT DVD_RatingId FOREIGN KEY (RatingId) REFERENCES Rating(RatingId)
+);
+CREATE TABLE RentalQueue(
+MemberId		NUMBER(12)	NOT NULL,
+DVDId			NUMBER(16)	NOT NULL,
+DateAddedInQueue	DATE		NOT NULL,
+CONSTRAINT RentalQueue_MemberId_DVDId_PK PRIMARY KEY (MemberId,DVDId),
+CONSTRAINT RentalQueue_MemberId_FK FOREIGN KEY (MemberId) REFERENCES Member(MemberId),
+CONSTRAINT RentalQueue_DVDId_FK FOREIGN KEY (DVDId) REFERENCES DVD(DVDId)
+);
+CREATE TABLE MoviePersonRole(
+PersonId		NUMBER(12)	NOT NULL,
+RoleId			NUMBER(2)	NOT NULL,
+DVDId			NUMBER(16)	NOT NULL,
+CONSTRAINT MoviePersonRole_PK PRIMARY KEY (PersonId,DVDId,RoleId),
+CONSTRAINT MoviePersonRole_PersonId_FK FOREIGN KEY (PersonId) REFERENCES MoviePerson(PersonId),
+CONSTRAINT MoviePersonRole_DVDId_FK FOREIGN KEY (DVDId) REFERENCES DVD(DVDId),
+CONSTRAINT MoviePersonRole_RoleId_FK FOREIGN KEY (RoleId) REFERENCES Role(RoleId)
+);
+CREATE TABLE Rental(
+RentalId		NUMBER(16)	NOT NULL,
+MemberId		NUMBER(12)	NOT NULL,
+DVDId			NUMBER(16)	NOT NULL,
+RentalRequestDate	DATE		NOT NULL,
+RentalShippedDate	DATE,
+RentalReturnedDate	DATE,
+CONSTRAINT Rental_RentalId_PK PRIMARY KEY (RentalId),
+CONSTRAINT Rental_MemberId_FK FOREIGN KEY (MemberId) REFERENCES Member(MemberId),
+CONSTRAINT Rental_DVDId_FK FOREIGN KEY (DVDId) REFERENCES DVD(DVDId)
+);
